@@ -67,6 +67,21 @@
                 layer.bindPopup(opening_hours + "<br>" + wheelchair_access + "<br>" + google_directions);
             }
         }).addTo(map));
+
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    // Add marker with popup
+                    L.marker([lat, lng])
+                        .addTo(map)
+                        .bindPopup(`<b>Vous êtes ici!</b>`)
+                        .openPopup();
+                }
+            );
+        } 
     </script>
 </body>
 </html>
