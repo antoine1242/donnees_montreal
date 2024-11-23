@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Toilettes à Montréal</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <h1>Toilettes à Montréal</h1>
+    <div id="map" style="width: 100%; height: 90vh;"></div>
+    <script>
+        var map = L.map('map').setView([45.55, -73.65], 11);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        var toiletIcon = L.icon({
+            iconUrl: 'toilet_icon.png',
+            iconSize: [32, 37],
+            iconAnchor: [16, 37],
+            popupAnchor: [0, -37]
+        });
+
+        fetch('export.geojson')
+        .then(response => response.json())
+        .then(data => L.geoJSON(data, {
+            pointToLayer: function (feature, latlng) {
+                return L.marker(latlng, { icon: toiletIcon }); 
+            },
+            onEachFeature: function (feature, layer) {
+                let opening_hours = "<b>Heures d'ouverture: </b>"
+                if (feature.properties && feature.properties.opening_hours) {
+                    opening_hours += feature.properties.opening_hours;
+                }
+                else {
+                    opening_hours += "Inconnu";
+                }
+
+                let wheelchair_access = "<b>Accès aux handicapés: </b>"
+                if (feature.properties && feature.properties.wheelchair && feature.properties.wheelchair) {
+                    if (feature.properties.wheelchair == "yes") {
+                        wheelchair_access += "Oui";
+                    }
+                    else if (feature.properties.wheelchair == "no") {
+                        wheelchair_access += "Non";
+                    }
+                    else if (feature.properties.wheelchair == "limited") {
+                        wheelchair_access += "Limité";
+                    }
+                    else {
+                        wheelchair_access += feature.properties.wheelchair;
+                    }
+                    
+                }
+                else {
+                    wheelchair_access += "Inconnu";
+                }
+                
+                const latlng = feature.geometry.coordinates;
+                const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${latlng[1]},${latlng[0]}&travelmode=walking`;
+                let google_directions = `<a href='${directionsUrl}' target='_blank'>Obtenir les directions</a>`;
+
+                layer.bindPopup(opening_hours + "<br>" + wheelchair_access + "<br>" + google_directions);
+            }
+        }).addTo(map));
+    </script>
+</body>
+</html>
